@@ -1,0 +1,23 @@
+## dynamic_conf.yml
+
+http:
+  routers:
+    backend-router:
+      rule: "PathPrefix(`/`)"
+      service: backend-service
+      entryPoints:
+        - web
+      middlewares:
+        - auth-mw
+
+  services:
+    backend-service:
+      loadBalancer:
+        servers:
+          - url: "http://backend:8000"
+
+  middlewares:
+    auth-mw:
+      forwardAuth:
+        address: "http://auth-proxy:8001/test-auth"
+        trustForwardHeader: true

@@ -1,0 +1,46 @@
+# version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v3.5.4
+    container_name: traefik
+    command:
+      - "--providers.file.filename=/etc/traefik/dynamic_conf.yml"
+      - "--api.dashboard=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "${TRAEFIK_DASHBOARD_PORT}:8080"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml
+    networks:
+      - internal
+    depends_on:
+      - auth-proxy
+      - backend
+
+  auth-proxy:
+    build: ./auth-proxy
+    container_name: auth-proxy
+    env_file: ./auth-proxy/.env
+    expose:
+      - "${AUTH_PROXY_PORT}"
+    ports:
+      - "${AUTH_PROXY_PORT}:${AUTH_PROXY_PORT}"
+    networks:
+      - internal
+
+  backend:
+    build: ./backend
+    container_name: backend
+    expose:
+      - "${BACKEND_PORT}"
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge

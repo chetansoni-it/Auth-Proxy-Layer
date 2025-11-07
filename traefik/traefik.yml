@@ -1,0 +1,15 @@
+## traefik.yml
+
+# API and dashboard configuration
+api:
+  # dashboard: true
+  insecure: true
+
+# entryPoints:
+#   web:
+#     address: ":80"
+
+# # Docker configuration backend
+# providers:
+#   docker:
+#     defaultRule: "Host(`{{ trimPrefix `/` .Name }}.docker.localhost`)"
