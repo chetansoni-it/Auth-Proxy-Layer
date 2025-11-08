@@ -4,10 +4,6 @@ services:
   traefik:
     image: traefik:v3.5.4
     container_name: traefik
-    command:
-      - "--providers.file.filename=/etc/traefik/dynamic_conf.yml"
-      - "--api.dashboard=true"
-      - "--entrypoints.web.address=:80"
     ports:
       - "80:80"
       - "${TRAEFIK_DASHBOARD_PORT}:8080"

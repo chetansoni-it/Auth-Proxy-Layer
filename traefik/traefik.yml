@@ -2,14 +2,16 @@
 
 # API and dashboard configuration
 api:
-  # dashboard: true
+  dashboard: true
   insecure: true
 
-# entryPoints:
-#   web:
-#     address: ":80"
+# Define entry points
+entryPoints:
+  web:
+    address: ":80"
 
-# # Docker configuration backend
-# providers:
-#   docker:
-#     defaultRule: "Host(`{{ trimPrefix `/` .Name }}.docker.localhost`)"
+# Providers configuration
+providers:
+  file:
+    filename: /etc/traefik/dynamic_conf.yml
+    watch: true

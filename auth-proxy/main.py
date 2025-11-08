@@ -16,13 +16,19 @@ logger = get_logger("auth-proxy")
 FAKE_USER_ID = os.getenv("FAKE_USER_ID", "admin")
 FAKE_USER_PASSWORD = os.getenv("FAKE_USER_PASSWORD", "admin123")
 
+# Middleware for authentication, can be replaced with JWT/OAuth later
+# only /health is excluded from authentication
+
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     """
     Acts as an authentication layer for incoming requests.
     In future, you can swap this for JWT or OAuth verification.
     """
-    auth_header = request.headers.get("Authorization")
+
+    # Skip authentication for specific endpoints
+    if request.url.path in ["/health"]:
+        return await call_next(request)
 
     # Example: Basic Auth (Authorization: Basic base64encoded(username:password))
     # For now, we’ll accept simple headers: X-User and X-Password
@@ -41,6 +47,36 @@ async def auth_middleware(request: Request, call_next):
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"error": "Unauthorized - Invalid credentials"},
         )
+
+
+
+# Here middleware intercepts all requests to perform authentication.
+# 
+# @app.middleware("http")
+# async def auth_middleware(request: Request, call_next):
+#     """
+#     Acts as an authentication layer for incoming requests.
+#     In future, you can swap this for JWT or OAuth verification.
+#     """
+#     auth_header = request.headers.get("Authorization")
+
+#     # Example: Basic Auth (Authorization: Basic base64encoded(username:password))
+#     # For now, we’ll accept simple headers: X-User and X-Password
+#     user = request.headers.get("X-User")
+#     password = request.headers.get("X-Password")
+
+#     if user == FAKE_USER_ID and password == FAKE_USER_PASSWORD:
+#         # Auth successful — log and add header for backend
+#         logger.info(f"User '{user}' authenticated successfully.")
+#         response = await call_next(request)
+#         response.headers["X-User"] = user
+#         return response
+#     else:
+#         logger.warning("Unauthorized access attempt.")
+#         return JSONResponse(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             content={"error": "Unauthorized - Invalid credentials"},
+#         )
 
 @app.get("/health")
 async def health_check():
