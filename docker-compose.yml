@@ -1,6 +1,21 @@
 # version: "3.9"
 
 services:
+  # traefik:
+  #   image: traefik:v3.5.4
+  #   container_name: traefik
+  #   ports:
+  #     - "80:80"
+  #     - "${TRAEFIK_DASHBOARD_PORT}:8080"
+  #   volumes:
+  #     - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+  #     - ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml
+  #   networks:
+  #     - internal
+  #   depends_on:
+  #     - auth-proxy
+  #     - backend
+
   nginx:
     image: nginx:1.29.3-alpine3.22
     container_name: nginx
