@@ -31,7 +31,8 @@ services:
 
   auth-proxy:
     build: ./auth-proxy
-    container_name: auth-proxy
+    image: myorg/auth-proxy:v1.0.1      # 🧩 Image name + tag
+    container_name: auth-proxy          # ✅ Explicit container name
     env_file: ./auth-proxy/.env
     expose:
       - "${AUTH_PROXY_PORT}"
@@ -41,8 +42,8 @@ services:
       - internal
 
   backend:
-    build: ./backend
-    container_name: backend
+    image: myorg/backend:v1.0.1        # 🧩 Image name + tag
+    container_name: backend            # ✅ Explicit container name
     expose:
       - "${BACKEND_PORT}"
     ports:
