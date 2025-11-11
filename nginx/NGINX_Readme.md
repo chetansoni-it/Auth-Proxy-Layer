@@ -51,9 +51,9 @@ server {
 
 ---
 
-### 4. Main Route (`/`)
+### 4. Main Route (`/v1/`)
 ```nginx
-location / {
+location /v1/ {
     auth_request /auth;
     proxy_pass http://backend_service;
     proxy_set_header X-User $remote_user;
