@@ -1,23 +1,66 @@
-## dynamic_conf.yml
-
 http:
   routers:
+    # ===========================
+    # Backend Router (/v1/*)
+    # ===========================
     backend-router:
-      rule: "PathPrefix(`/`)"
+      rule: "PathPrefix(`/v1`)"
       service: backend-service
       entryPoints:
         - web
       middlewares:
+        - strip-v1
         - auth-mw
 
+    # ===========================
+    # Auth Proxy Health Router
+    # ===========================
+    auth-health-router:
+      rule: "PathPrefix(`/auth-proxy-health`)"
+      service: auth-health-service
+      entryPoints:
+        - web
+      middlewares:
+        - rewrite-health
+
+  # ===========================
+  # Services (backends)
+  # ===========================
   services:
     backend-service:
       loadBalancer:
         servers:
           - url: "http://backend:8000"
 
+    auth-health-service:
+      loadBalancer:
+        servers:
+          - url: "http://auth-proxy:8001"
+
+  # ===========================
+  # Middlewares
+  # ===========================
   middlewares:
+    # 1️⃣ Auth middleware for /v1/*
     auth-mw:
       forwardAuth:
         address: "http://auth-proxy:8001/test-auth"
         trustForwardHeader: true
+
+    # 2️⃣ Strip /v1 prefix
+    strip-v1:
+      stripPrefix:
+        prefixes:
+          - "/v1"
+
+    # 3️⃣ Rewrite /auth-proxy-health → /health
+    rewrite-health:
+      replacePath:
+        path: /health
+
+
+    # # 3️⃣ Strip /auth-proxy-health prefix
+    # strip-auth-health:
+    #   replacePathRegex:
+    #     regex: "^/auth-proxy-health/?(.*)"
+    #     replacement: "/$1"
