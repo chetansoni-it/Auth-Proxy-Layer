@@ -2,100 +2,137 @@
 # version: "3.9"
 
 services:
-  # traefik:
-  #   image: traefik:v3.5.4
-  #   container_name: traefik
-  #   ports:
-  #     - "80:80"
-  #     - "${TRAEFIK_DASHBOARD_PORT}:8080"
-  #   volumes:
-  #     - ./traefik/traefik.yml:/etc/traefik/traefik.yml
-  #     - ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml
-  #   networks:
-  #     - internal
-  #   depends_on:
-  #     - auth-proxy
-  #     - backend
+##############################################################
+# Load Balancer and Reverse Proxy Layer
+# Choose either Traefik or Nginx by uncommenting the respective section.
+# Both should not be used together.
+##############################################################
 
-  nginx:
-    image: nginx:1.29.3-alpine3.22
-    container_name: nginx
+  traefik:
+    image: traefik:v3.5.4
+    container_name: traefik
+    restart: always
+
+  # Exposing internal port 8080 to external port defined in root folder ".env" by "TRAEFIK_DASHBOARD_PORT"
     ports:
       - "80:80"
+      - "${TRAEFIK_DASHBOARD_PORT}:8080"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik/dynamic_conf.yml:/etc/traefik/dynamic_conf.yml
     networks:
       - internal
     depends_on:
       - auth-proxy
       - backend
 
+  # nginx:
+  #   image: nginx:1.29.3-alpine3.22
+  #   container_name: nginx
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #   networks:
+  #     - internal
+  #   depends_on:
+  #     - auth-proxy
+  #     - backend
+
+##############################################################
+# Authentication Layer acting as Reverse Proxy for Application Layer
+##############################################################
+
   auth-proxy:
-    build: ./auth-proxy
+    build:
+      context: ./auth-proxy
     image: myorg/auth-proxy:v1.0.1      # 🧩 Image name + tag
     container_name: auth-proxy          # ✅ Explicit container name
-    env_file: ./auth-proxy/.env
-    expose:
-      - "${AUTH_PROXY_PORT}"
-    ports:
-      - "${AUTH_PROXY_PORT}:${AUTH_PROXY_PORT}"
+    restart: always
+    env_file:
+      - ./auth-proxy/.env
+    
+    # # Exposing internal port 8001 to external port defined in root folder ".env" by "AUTH_PROXY_PORT"
+    # ports:
+    #   - "${AUTH_PROXY_PORT}:8001"
     networks:
       - internal
     depends_on:
-      - backend
       - postgres
 
+
+##############################################################
+# Application Layer
+##############################################################
   backend:
-    build: ./backend
+    build:
+      context: ./backend
     image: myorg/backend:v1.0.1    # 🧩 Image name + tag
     container_name: backend
-    expose:
-      - "${BACKEND_PORT}"
-    ports:
-      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    restart: always
+    env_file:
+      - ./backend/.env
+
+    # # Exposing internal port 8000 to external port defined in root folder ".env" by "BACKEND_PORT"
+    # ports:
+    #   - "${BACKEND_PORT}:8000"
     networks:
       - internal
+    depends_on:
+      - postgres
+      - auth-proxy
 
+##############################################################
+# Database Layer
+##############################################################
   postgres:
     image: postgres:18.0-alpine3.22    # 18.0-alpine3.22 or 17.6-alpine3.22
     container_name: postgres
     restart: always
-    env_file: ./postgres/.env
-    ports:
-      - "5432:5432"
+    env_file:
+      - ./postgres/.env
+
+    # # Exposing internal port 5432 to external port defined in root folder ".env" by "POSTGRES_PORT"
+    # ports:
+    #   - "${POSTGRES_PORT}:5432"
     volumes:
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - postgres_data:/var/lib/postgresql/data
     networks:
       - internal
 
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4:9.9.0
-    restart: always
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: root
-    ports:
-      - "5050:80"
-    networks:
-      - internal
+# ##################################################################
+# # Optional Database Management Tools, uncomment any one if needed.
+# # pgadmin and adminer should not be used together as they both use the same port 5050.
+# # Choose either pgadmin or adminer by uncommenting the respective section.
+# ##################################################################
+#   pgadmin:
+#     container_name: pgadmin_container
+#     image: dpage/pgadmin4:9.9.0
+#     restart: always
+#     volumes:
+#       - pgadmin-data:/var/lib/pgadmin
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: admin@admin.com
+#       PGADMIN_DEFAULT_PASSWORD: root
+#     ports:
+#       - "5050:80"
+#     networks:
+#       - internal
 
-  # adminer:
-  #   container_name: adminer_container
-  #   image: adminer
-  #   restart: always
-  #   ports:
-  #     - "5050:8080"
-  #   networks:
-  #     - internal
-
+#   adminer:
+#     container_name: adminer_container
+#     image: adminer
+#     restart: always
+#     ports:
+#       - "5050:8080"
+#     networks:
+#       - internal
+# ##################################################################
 
 volumes:
   postgres_data:
-  pgadmin-data:
+  # pgadmin-data:
 
 networks:
   internal:

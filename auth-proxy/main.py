@@ -8,7 +8,8 @@ import os
 load_dotenv()
 
 app = FastAPI(
-    title="Auth Proxy Service"
+    title="Auth Proxy Service",
+    version=os.getenv("AUTH_PROXY_VERSION"),
     )
 
 logger = get_logger("auth-proxy")
@@ -59,12 +60,12 @@ async def auth_middleware(request: Request, call_next):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "Auth Proxy running fine ✅"}
+    return {"status": "Auth Proxy running fine ✅, running version " + os.getenv("AUTH_PROXY_VERSION")}
 
 @app.get("/test-auth")
 async def test_auth(request: Request):
     user = request.headers.get("X-User", "Anonymous")
-    return {"message": f"Hello {user}, Auth Proxy is up and running!"}
+    return {"message": f"Hello {user}, Auth Proxy is up and running!, running version " + os.getenv("AUTH_PROXY_VERSION")}
 
 
 # ### Old hardcoded version for reference

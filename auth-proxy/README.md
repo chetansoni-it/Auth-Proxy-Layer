@@ -31,16 +31,25 @@ auth-proxy/
 
 ## ⚙️ Environment Variables (`.env`)
 ```bash
+AUTH_PROXY_VERSION=1.0.1
 AUTH_PROXY_PORT=8001
+
 FAKE_USER_ID=admin
 FAKE_USER_PASSWORD=admin123
+
+DB_TYPE=postgres
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=authdb
+DB_USER=authuser
+DB_PASSWORD=authpass
 ```
 ---
 
 ## 🏃 Run Locally
 1. Using FastAPI
 ```bash
-fastapi run main.py
+fastapi run main.py --port ${AUTH_PROXY_PORT}
 ```
 
 2. Test Auth Logic
